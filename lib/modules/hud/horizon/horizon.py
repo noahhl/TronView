@@ -171,6 +171,8 @@ class Horizon(Module):
                 if l % 5 == 0 and l % 10 != 0:
                     continue
 
+#            if l == 0:
+#                print(line_coords[1][1], line_coords[2][1])
             # draw below or above the horz
             if l < 0:
                 # draw below.
@@ -295,30 +297,47 @@ class Horizon(Module):
         def mean(nums):
             return int(sum(nums)) / max(len(nums), 1)
 
+        if aircraft.gndspeed < 30: #don't show the FPV when you're not moving
+            return
+
+        #find the reference line coords for the track angle we're at
+        line_coords = self.generateHudReferenceLineArray(
+            smartdisplay.width,
+            smartdisplay.height,
+            (smartdisplay.x_center + self.x_offset,smartdisplay.y_center + self.y_offset),
+            self.pxy_div,
+            pitch=aircraft.pitch,
+            roll=aircraft.roll,
+            deg_ref=aircraft.gndangle
+        )
         # flight path indicator  Default Caged Mode
         if self.caged_mode == 1:
             fpv_x = 0.0
         else:
-            fpv_x = ((((aircraft.mag_head - aircraft.gndtrack) + 180) % 360) - 180) * 1.5  - (
+            fpv_x = ((((aircraft.mag_head - aircraft.gndtrack + aircraft.mag_decl) + 180) % 360) - 180) * 1.5  - (
                 aircraft.turn_rate * 5
             )
             self.readings.append(fpv_x)
             fpv_x = mean(self.readings)  # Moving average to smooth a bit
             if len(self.readings) == self.max_samples:
                 self.readings.pop(0)
-        gfpv_x = ((((aircraft.mag_head - aircraft.gndtrack) + 180) % 360) - 180) * 1.5  - (
+        gfpv_x = ((((aircraft.mag_head - aircraft.gndtrack + aircraft.mag_decl) + 180) % 360) - 180) * 1.5  - (
             aircraft.turn_rate * 5
         )
         self.readings1.append(gfpv_x)
         gfpv_x = mean(self.readings1)  # Moving average to smooth a bit
+        fpv_y = line_coords[1][1] #- (fpv_x * 5) * math.tan(math.radians(aircraft.roll))
         if len(self.readings1) == self.max_samples1:
             self.readings1.pop(0)
+   
+        #pygame.draw.line(smartdisplay.pygamescreen, (255,0,255), line_coords[1], line_coords[2],2)
+
         self.draw_circle(
             smartdisplay.pygamescreen,
             (255, 0, 255),  # changed from Magenta 255, 0, 255
             (
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5),
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                fpv_y
             ),
             15,
             4,
@@ -329,11 +348,11 @@ class Horizon(Module):
             (255, 0, 255),
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5) - 15,
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                fpv_y
             ],
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5) - 30,
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                fpv_y
             ],
             2,
         )
@@ -342,11 +361,11 @@ class Horizon(Module):
             (255, 0, 255),
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5) + 15,
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                fpv_y
             ],
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5) + 30,
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                fpv_y
             ],
             2,
         )
@@ -355,11 +374,11 @@ class Horizon(Module):
             (255, 0, 255),
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5),
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2) - 15,
+                fpv_y - 15,
             ],
             [
                 (smartdisplay.width / 2 + self.x_offset) - (int(fpv_x) * 5),
-                (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2) - 30,
+                fpv_y - 30,
             ],
             2,
         )
@@ -369,11 +388,11 @@ class Horizon(Module):
                 (255, 0, 255),
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5) - 15,
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                    fpv_y
                 ],
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5) - 30,
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                    fpv_y
                 ],
                 2,
             )
@@ -382,11 +401,11 @@ class Horizon(Module):
                 (255, 0, 255),
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5) + 15,
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                    fpv_y
                 ],
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5) + 30,
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2),
+                    fpv_y
                 ],
                 2,
             )
@@ -395,11 +414,11 @@ class Horizon(Module):
                 (255, 0, 255),
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5),
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2) - 15,
+                    fpv_y - 15
                 ],
                 [
                     (smartdisplay.width / 2 + self.x_offset) - (int(gfpv_x) * 5),
-                    (smartdisplay.y_center + self.y_offset) - (aircraft.vsi / 2) - 30,
+                    fpv_y - 30
                 ],
                 2,
             )
