@@ -34,6 +34,7 @@ class Aircraft(object):
         self.aoa = None # percentage 0 to 100 (if available)
         self.mag_head = 0 # 0 to 360
         self.gndtrack = 0 #TODO: Move to GPSData class?
+        self.gndangle = 0
         self.baro = 0 # inches of mercury
         self.baro_diff = 0
         self.vsi = 0 # ft/min
@@ -45,7 +46,7 @@ class Aircraft(object):
         self.wind_speed = None
         self.wind_dir = None
         self.norm_wind_dir = None #corrected for aircraft heading for wind direction pointer
-        self.mag_decl = None #magnetic declination
+        self.mag_decl = 0#magnetic declination
 
         self.gps = GPSData()
         self.engine = EngineData()
@@ -255,7 +256,7 @@ class GPSData(object):
         self.NSVelDir = None  # N or S
         self.NSVelmag = None  # x.x m/s
         self.VVelDir = None  # U or D
-        self.VVelmag = None  # x.xx m/s
+        self.VVelmag = 0 # x.xx m/s
         self.SatsTracked = None
         self.SatsVisible = None
         self.GPSStatus = None # GPS status. 0=Acquiring, 1=dead reckoning,2=2d fix,3=3dfix,4=2dfix(imu),5=3dfix(imu)
