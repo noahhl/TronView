@@ -36,6 +36,7 @@ class serial_g3x(Input):
     def initInput(self,num, aircraft):
         aircraft.setDataMeasurementFormat(1)
         Input.initInput(self,num, aircraft)  # call parent init Input.
+        self.startLog(aircraft)
         if(aircraft.inputs[self.inputNum].PlayFile!=None):
             # play a log file?
             if aircraft.inputs[self.inputNum].PlayFile==True:
@@ -137,7 +138,7 @@ class serial_g3x(Input):
                                 aircraft.mag_decl,
                             )
                             if self.output_logFile != None:
-                                Input.addToLog(self,self.output_logFile,bytes([64]))
+                                Input.addToLog(self,self.output_logFile,bytes([61,64]))
                                 Input.addToLog(self,self.output_logFile,msg)
 
                             aircraft.gps.msg_count += 1
@@ -207,7 +208,7 @@ class serial_g3x(Input):
                             time.sleep(0.01)
 
                         if self.output_logFile != None:
-                            #Input.addToLog(self,self.output_logFile,bytes([61,ord(SentID)]))
+                            Input.addToLog(self,self.output_logFile,bytes([61,*SentID.to_bytes()]))
                             Input.addToLog(self,self.output_logFile,msg)
 
 
@@ -247,7 +248,7 @@ class serial_g3x(Input):
                         aircraft.gndspeed = int(Groundspeed) * 0.115078 if _utils.is_number(Groundspeed) else 0  #in mph
                         aircraft.msg_count += 1
                         if self.output_logFile != None:
-                            #Input.addToLog(self,self.output_logFile,bytes([61,ord(SentID)]))
+                            Input.addToLog(self,self.output_logFile,bytes([61,*SentID.to_bytes()]))
                             Input.addToLog(self,self.output_logFile,msg)
 
                     else:
@@ -285,6 +286,10 @@ class serial_g3x(Input):
                     aircraft.fuel.FuelLevels[1] = int(FQ2) / 10.0 if _utils.is_number(FQ2) else 0 
                     aircraft.fuel.FuelLevels[2] = int(FQ3) / 10.0 if _utils.is_number(FQ3) else 0 
                     aircraft.fuel.FuelLevels[3] = int(FQ4) / 10.0 if _utils.is_number(FQ4) else 0 
+                    if self.output_logFile != None:
+                        Input.addToLog(self,self.output_logFile,bytes([61,*SentID.to_bytes()]))
+                        Input.addToLog(self,self.output_logFile,msg)
+
                 else:
                     aircraft.engine.msg_bad += 1
                     aircraft.engine.debug1 = "bad engine data - wrong length"
@@ -292,6 +297,11 @@ class serial_g3x(Input):
             else:
                 aircraft.debug2 = SentID
                 aircraft.msg_unknown += 1  # else unknown message.
+                if self.output_logFile != None:
+                    Input.addToLog(self,self.output_logFile,bytes([61,*SentID.to_bytes()]))
+                    msg = self.ser.readline()
+                    if(isinstance(msg,str)): msg = msg.encode() # if read from file then convert to bytes
+                    Input.addToLog(self,self.output_logFile,msg)
                 if self.isPlaybackMode:
                     time.sleep(0.01)
                 else:

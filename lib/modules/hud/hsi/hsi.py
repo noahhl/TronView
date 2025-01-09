@@ -13,6 +13,9 @@ from lib import aircraft
 import pygame
 import math
 
+def roint(num):
+    return int(round(num))
+
 
 class HSI(Module):
     # called only when object is first created.
@@ -93,10 +96,10 @@ class HSI(Module):
         self.R33_rect = self.R33.get_rect()
 
         # Setup Ground Track Tick
-        self.gnd_trk_tick = pygame.image.load("lib/modules/hud/hsi/tick_m.png").convert()
-        self.gnd_trk_tick.set_colorkey((255, 255, 255))
+        gnd_trk_tick = pygame.image.load("lib/modules/hud/hsi/tick_m.png").convert()
+        gnd_trk_tick.set_colorkey((255, 255, 255))
         self.gnd_trk_tick_scaled = pygame.transform.scale(
-            self.gnd_trk_tick, (self.gnd_trk_tick_size, self.gnd_trk_tick_size)
+            gnd_trk_tick, (self.gnd_trk_tick_size, self.gnd_trk_tick_size)
         )
         self.gnd_trk_tick_scaled_rect = self.gnd_trk_tick_scaled.get_rect()
 
@@ -108,9 +111,6 @@ class HSI(Module):
                 (self.hsi_size / 2) - 130 - self.gnd_trk_tick_scaled_rect[1],
             ),
         )
-
-    def roint(self,num):
-        return int(round(num))
 
     # Create HSI label coordinates
     def labeler(self, hsi_hdg):
@@ -237,12 +237,12 @@ class HSI(Module):
 
 
     # called every redraw for the mod
-    def draw(self, aircraft, smartdisplay, pos):
+    def draw(self, aircraft, smartdisplay):#, pos):
 
-        x,y = pos
+        #x,y = pos
 
         hsi_hdg = aircraft.mag_head
-        gnd_trk = aircraft.gndtrack
+        gnd_trk = aircraft.gndtrack - aircraft.mag_decl
         turn_rate = aircraft.turn_rate
 
         hsi_hdg = (hsi_hdg + 90) % 360
@@ -257,11 +257,10 @@ class HSI(Module):
         )
 
         # Draw Labels
-        global old_hsi_hdg
         if (
-            old_hsi_hdg != hsi_hdg
+            self.old_hsi_hdg != hsi_hdg
         ):  # Don't waste time recalculating/redrawing until the variable changes
-            labeler(self, hsi_hdg)
+            self.labeler(hsi_hdg)
         label_rect = self.labels.get_rect()
         self.pygamescreen.blit(
             self.labels,
@@ -270,10 +269,11 @@ class HSI(Module):
         self.old_hsi_hdg = hsi_hdg  # save the last heading.
 
         # Draw Ticks
-        self.gnd_trk_tick(smartdisplay,gnd_trk)
+        if aircraft.gndspeed > 10:
+            self.gnd_trk_tick(smartdisplay,gnd_trk)
 
         # Draw Turn Rate
-        self.turn_rate_disp(smartdisplay,urn_rate)
+        self.turn_rate_disp(smartdisplay,turn_rate)
 
 
     # called before screen draw.  To clear the screen to your favorite color.

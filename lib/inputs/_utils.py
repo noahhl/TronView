@@ -72,7 +72,8 @@ def gndtrack(EWVelDir, EWVelmag, NSVelDir, NSVelmag):
         NSVelmag = int(NSVelmag) * 0.1
 
     gndtrack = (math.degrees(math.atan2(EWVelmag, NSVelmag))) % 360
-    
+    #print(f'gndtrack: {gndtrack}, ew: {EWVelmag}{EWVelDir}, ns: {NSVelmag}{NSVelDir}')
+
     return gndtrack
 
 #############################################
@@ -83,13 +84,23 @@ def windSpdDir(tas, gndspeed, gndtrack, mag_head, mag_decl):
     if tas > 30 and gndspeed > 30:
         crs = math.radians(gndtrack) #convert degrees to radians
         head = math.radians(mag_head + mag_decl) #convert degrees to radians
-        wind_speed = math.sqrt(math.pow(tas - gndspeed, 2) + 4 * tas * gndspeed * math.pow(math.sin((head - crs) / 2), 2))
-        wind_dir = crs + math.atan2(tas * math.sin(head-crs), tas * math.cos(head-crs) - gndspeed)
-        if wind_dir < 0:
-            wind_dir = wind_dir + 2 * math.pi
-        if wind_dir > 2 * math.pi:
-            wind_dir = wind_dir - 2 * math.pi
+        
+        v_wind_north = gndspeed * math.cos(crs) - tas * math.cos(head)
+        v_wind_east = gndspeed * math.sin(crs) - tas * math.sin(head)
+        wind_speed = math.sqrt(math.pow(v_wind_north,2) + math.pow(v_wind_east,2))
+        wind_dir = math.atan2( v_wind_north,  v_wind_east) + math.pi/2
+        if v_wind_east < 0:
+            wind_dir += math.pi/2
+
+
+        #wind_speed = math.sqrt(math.pow(tas - gndspeed, 2) + 4 * tas * gndspeed * math.pow(math.sin((head - crs) / 2), 2))
+        #wind_dir = crs + math.atan2(tas * math.sin(head-crs), tas * math.cos(head-crs) - gndspeed)
+        #if wind_dir < 0:
+        #    wind_dir = wind_dir + 2 * math.pi
+        #if wind_dir > 2 * math.pi:
+        #    wind_dir = wind_dir - 2 * math.pi
         wind_dir = math.degrees(wind_dir) #convert radians to degrees
+    #    print(f'N:{v_wind_north}, E:{v_wind_east}, mag: {wind_speed}, dir: {wind_dir}')
         norm_wind_dir = (mag_head - wind_dir + mag_decl) % 360 #normalize the wind direction to the airplane heading
 
     else:

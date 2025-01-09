@@ -20,7 +20,7 @@ from lib.modules.hud.rollindicator import rollindicator
 from lib.modules.hud.aoa import aoa
 from lib.modules.hud.slipskid import slipskid
 from lib.modules.hud.wind import wind
-#from lib.modules.hud.hsi import hsi
+from lib.modules.hud.hsi import hsi
 from lib.modules.hud.heading import heading
 from lib.modules.efis.trafficscope import trafficscope
 
@@ -82,6 +82,10 @@ class BZ(Screen):
         self.trafficScope.initMod(self.pygamescreen, 400, 400)
         self.horizon.cyclecaged_mode()
 
+        self.hsi = hsi.HSI()
+        self.hsi.initMod(self.pygamescreen, 400, 400)
+        self.hsi.setup(400, 20, (255,255,0), (255,255,0))
+
     # called every redraw for the screen
     def draw(self, aircraft, smartdisplay):
         aircraft.setDataMeasurementFormat(1)
@@ -91,6 +95,10 @@ class BZ(Screen):
 
         # draw roll indicator
         self.horizon.draw(aircraft,smartdisplay)
+
+        # draw HSI
+        #self.hsi.draw(aircraft,smartdisplay)
+        #self.hsi.turn_rate_disp(smartdisplay,aircraft.turn_rate)
  
         # IAS
         smartdisplay.draw_box_text_padding(
@@ -126,7 +134,6 @@ class BZ(Screen):
         smartdisplay.draw_text(smartdisplay.RIGHT_MID_DOWN, self.fontIndicatorSmaller, "AGL %s" % (aircraft.agl), (255, 255, 0))
 
         # time string
-        smartdisplay.draw_text(smartdisplay.RIGHT_MID_DOWN, self.fontIndicatorSmaller, "%s UTC" % (aircraft.sys_time_string), (255, 255, 0))
         #smartdisplay.draw_text(smartdisplay.RIGHT_MID_DOWN, self.fontIndicatorSmaller, "%s" % ((aircraft.mag_head or 0 )- (aircraft.gndtrack or 0)+ (aircraft.mag_decl or 0)), (255, 255, 0))
 
         # Engine RPM
@@ -142,12 +149,14 @@ class BZ(Screen):
 
         # VSI text
         smartdisplay.draw_text(smartdisplay.RIGHT_MID_UP, self.fontIndicatorSmaller, aircraft.get_vsi_string(), (255, 255, 0))
+        smartdisplay.draw_text(smartdisplay.RIGHT_MID_UP, self.fontIndicatorSmaller, "%s UTC" % (aircraft.sys_time_string), (255, 255, 0))
 
         # True aispeed
         smartdisplay.draw_text(smartdisplay.LEFT_MID_UP, self.fontIndicatorSmaller, "TAS %d %s" % (aircraft.get_tas(), aircraft.get_speed_description()), (255, 255, 0))
 
         # Ground speed
         smartdisplay.draw_text(smartdisplay.LEFT_MID_DOWN, self.fontIndicatorSmaller, "GS %d" % (aircraft.get_gs()), (255, 255, 0))
+        smartdisplay.draw_text(smartdisplay.LEFT_MID_DOWN, self.fontIndicatorSmaller, "TRK %d" % (aircraft.gndtrack - aircraft.mag_decl), (255, 255, 0))
 
         # OAT text
         smartdisplay.draw_text(smartdisplay.LEFT_MID_DOWN, self.fontIndicatorSmaller, "%0.1f%s" % (aircraft.get_oat(),aircraft.get_temp_description()), (255, 255, 0))

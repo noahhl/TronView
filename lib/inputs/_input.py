@@ -84,9 +84,10 @@ class Input:
     def createLogFile(self,fileExtension,isBinary):
         # should we check if the usb drive is available to write to?
         try:
-            if (rpi_hardware.mount_usb_drive() == True and self.datarecorder_check_usb == True):
-                openFileName = self.getNextLogFile("/mnt/usb/",fileExtension)
-            else:
+            openFileName = None
+            try:
+                openFileName = self.getNextLogFile("/media/data/",fileExtension)
+            except:
                 DataRecorderPath = hud_utils.getDataRecorderDir()
                 openFileName = self.getNextLogFile(DataRecorderPath,fileExtension)
             if isBinary == True:
@@ -118,8 +119,8 @@ class Input:
         #print ("write")
         try:
             logfile.write(dataline)
-        except :
-            print("Error addToLog()")
+        except Exception as e :
+            print(f"Error addToLog() {e}")
 
     #############################################
     ## Method: getNextLogFile
